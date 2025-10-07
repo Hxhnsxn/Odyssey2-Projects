@@ -1,0 +1,168 @@
+	cpu	8048
+	org	400h
+	
+	include	"g7000.h"
+
+	jmp	selectgame	; RESET
+	jmp	irq		; interrupt
+	jmp	timer		; timer
+	jmp	vsyncirq	; VSYNC-interrupt
+	jmp	start		; after selectgame
+	jmp	soundirq	; sound-interrupt
+
+timer	
+	ret ; no timer needed for this program.
+
+	
+
+
+start
+
+	call gfxoff 	; it's best to turn off the graphics after start, otherwise the game
+					; won't work.
+
+	mov r0,#vdc_spr0_shape	; let's use sprite 0 for this shape
+	mov r1,#boat & 0ffh
+	call setshape
+
+	mov r0,#000h	; 000h is the y position of sprite 0. We'll set it to 100.
+	movx a,@r0	
+	mov a,#100
+	movx @r0,a	
+	
+	mov r0,#001h	; 001h is the x position of sprite 0. We'll set it to 80.
+	movx a,@r0	
+	mov a,#80
+	movx @r0,a	
+
+	; 002h is the color of sprite 0. You can also make the sprite larger by adding 
+	; spr_double, like I did here. If you don't want it, just delete it and the | symbol.
+	; the avaliable colors are 8: red, blue, cyan, violet, yellow, green, black and white.
+	mov r0,#002h 
+	movx a,@r0
+	mov	a,#col_spr_red | spr_double
+	movx	@r0,a	
+
+
+game_loop
+
+	;these next three lines are needed, they display the game on the screen.
+	call  gfxon
+	call	waitvsync	; wait for begin of frame
+	call  gfxoff
+
+	mov r1,#000h	; select joystick 0
+	call getjoystick	; call the joystick part of the bios.
+	mov a,r1		; get bit values
+	cpl a
+	
+	mov r0,a		; save joystick bits for later use
+
+	mov a,r0		; get joystick value back
+	anl a,#002h	; test right bit
+	jnz move_right	; jump to right routine			
+	
+	mov a,r0		; get joystick value back
+	anl a,#008h	; test right bit
+	jnz move_left	; jump to right routine			
+	
+	
+	;if you want to move diagonally, after the x bits are tested, make the code go here.
+game_loop_2	
+	mov r1,#000h	; select joystick 0
+	call getjoystick	; call the joystick part of the bios.
+	mov a,r1		; get bit values
+	cpl a
+	
+	mov r0,a		; save joystick bits for later use
+
+
+	mov a,r0		; get joystick value back
+	anl a,#004h	; test right bit
+	jnz move_down	; jump to right routine			
+	
+	mov a,r0		; get joystick value back
+	anl a,#001h	; test right bit
+	jnz move_up	; jump to right routine		
+	
+
+	jmp game_loop
+	
+move_left
+	mov r0,#001h	; get sprite 0 x pos
+	movx a,@r0	
+	xrl a,#000h
+	jz game_loop_2	; if sprite reaches the left-most, don't go out of the screen.
+	
+	mov r0,#001h	; get sprite 0 x pos
+	movx a,@r0
+	add a,#0ffh	; adjust x pos
+	movx @r0,a	
+
+	jmp game_loop_2
+	
+move_right
+	mov r0,#001h	; get sprite 0 x pos
+	movx a,@r0	
+	xrl a,#150
+	jz game_loop_2	; if sprite reaches the right-most, don't go out of the screen.
+	
+	mov r0,#001h	; get sprite 0 x pos
+	movx a,@r0
+	add a,#001h	; adjust x pos
+	movx @r0,a	
+
+	jmp game_loop_2	
+	
+	
+move_up
+	mov r0,#000h	; get sprite 0 y pos
+	movx a,@r0	
+	xrl a,#010h
+	jz game_loop	; if sprite reaches the top, don't go out of the screen.
+	
+	mov r0,#000h	; get sprite 0 y pos
+	movx a,@r0
+	add a,#0ffh	; adjust y pos
+	movx @r0,a	
+
+	jmp game_loop
+	
+move_down
+	mov r0,#000h	; get sprite 0 y pos
+	movx a,@r0	
+	xrl a,#0ddh
+	jmp game_loop	; if sprite reaches the bottom, don't go out of the screen.
+	
+	mov r0,#000h	; get sprite 0 y pos
+	movx a,@r0
+	add a,#001h	; adjust y pos
+	movx @r0,a	
+
+	jmp game_loop	
+	
+	; code I use to make shapes appear on the screen
+	; r0=spritepointer, r1=pointer to image in rom	
+	
+setshape:
+	mov	r7,#8		; 8 bytes
+copyspriteloop:
+	mov	a,r1
+	movp	a,@a		; get byte
+	movx	@r0,a
+	inc	r0
+	inc	r1
+	djnz	r7,copyspriteloop
+	ret		; return to the starting business.
+
+	; the shape we are going to use. You can change it to anything 8x8 or smaller. It reflects
+	; the x position, so anything you want to face right should face left and vice versa.
+boat
+	db	01110101b
+	db	01010111b
+	db	01010101b
+	db	01111101b
+	db	01010111b
+	db	01010101b
+	db	01111101b
+	db	01010111b
