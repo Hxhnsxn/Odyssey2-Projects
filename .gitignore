@@ -1,0 +1,5 @@
+# ignore any incoming batch files !!!
+*.bat
+# ignore moveasprite
+moveasprite.bin
+moveasprite.p
