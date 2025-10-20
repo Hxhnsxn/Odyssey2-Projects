@@ -1,6 +1,5 @@
 # ignore any incoming batch files !!!
 *.bat
-AS.bat
 g7000.h
 # ignore bin files and p files
 *.bin
