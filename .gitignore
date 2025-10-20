@@ -1,5 +1,9 @@
 # ignore any incoming batch files !!!
 *.bat
-# ignore moveasprite
-moveasprite.bin
-moveasprite.p
+AS.bat
+g7000.h
+# ignore bin files and p files
+*.bin
+*.p
+# ignore the bios pdf file
+g7kbios.pdf

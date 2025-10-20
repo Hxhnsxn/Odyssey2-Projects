@@ -1,0 +1,34 @@
+	cpu 8048
+	org 0400h ; This is the first address of the externam ROM which the BIOS jumps to on startup
+	include	"g7000.h"
+	jmp selectgame	; Init all sprites, chars, quads, and grids. VDC is enabled and graphics are ON
+	jmp irq			; Accounts for external interrupt
+	jmp timer		; Start timer if needed for the game
+	jmp vsyncirq	; Start of a new frame
+	jmp start
+	jmp soundirq	; For the sound events -- if any
+
+timer			; if there is a timer for the program
+	ret
+
+start
+	call gfxoff		; switch the graphics to off -- we need to update the screen
+	mov	r0,#vdc_char0	; start char pointer for the printchar
+	mov r3,#28h		; x pos
+	mov r4,#30h		; y pos
+	mov r2,#0Ah		; length
+	mov r1,#hello&0FFh	; the string to print
+	
+loop
+	mov a,r1
+	movp a,@a
+	mov r5,a
+	inc r1
+	mov r6,#col_chr_white
+	call printchar
+	djnz r2,loop
+	call gfxon
+stop jmp stop
+
+hello db	1Dh, 12h, 0Eh, 0Eh, 17h, 0Ch
+	  db	1Eh, 17h, 19h, 12h
