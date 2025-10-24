@@ -1,5 +1,5 @@
-	cpu 8048
-	org 0400h ; This is the first address of the externam ROM which the BIOS jumps to on startup
+	cpu 8048		; CPU of Odyssey
+	org 0400h 		; This is the first address of the externam ROM which the BIOS jumps to on startup
 	include	"g7000.h"
 	jmp selectgame	; Init all sprites, chars, quads, and grids. VDC is enabled and graphics are ON
 	jmp irq			; Accounts for external interrupt
@@ -20,15 +20,22 @@ start
 	mov r1,#hello&0FFh	; the string to print
 	
 loop
-	mov a,r1
-	movp a,@a
-	mov r5,a
-	inc r1
-	mov r6,#col_chr_white
-	call printchar
-	djnz r2,loop
-	call gfxon
-stop jmp stop
+	mov a,r1		; get the address where the string is 
+	movp a,@a		; get the value of each char
+	mov r5,a		; move char into argument register
+	inc r1			; adjust to next char
+	mov r6,#col_chr_white	; color the char white ????
+	call printchar	; call printchar()
+	; r0 = pointer to char
+	; r3 = x position
+	; r4 = y position
+	; r5 = character in hex
+	; r6 = color parameter
+	
+	djnz r2,loop	; if more chars, then loop
+	call gfxon		; switch graphics on
+stop jmp stop		; infinite loop :D
 
+; string "Hello Jose"
 hello db	1Dh, 12h, 0Eh, 0Eh, 17h, 0Ch
 	  db	1Eh, 17h, 19h, 12h
